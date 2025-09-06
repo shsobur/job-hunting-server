@@ -34,35 +34,14 @@ async function run() {
     // Connect the client to the server	(optional starting in v4.7)
     await client.connect();
 
+    // DB Collections__
     const db = client.db("jobHuntingDB");
     const usersCollection = db.collection("users");
 
-    // Data routes workshop ST__
+    // Import routes and pass collections__
+    const usersRoutes = require("./User/user.routes");
 
-    app.post("/new-user-data", async (req, res) => {
-      try {
-        const data = req.body;
-        console.log(data);
-        const userEmail = data.email;
-
-        // Check if email already exists__
-        // const existingUser = await usersCollection.findOne({
-        //   email: userEmail,
-        // });
-        // if (existingUser) {
-        //   return res.status(400).send({ message: "Email already exists" });
-        // }
-
-        // Insert if not found__
-        const result = await usersCollection.insertOne(data);
-        res.status(200).send(result);
-      } catch (error) {
-        console.error("Error inserting user:", error);
-        res.status(500).send({ message: "Internal server error" });
-      }
-    });
-
-    // Data routes workshop END__
+    app.use("/user-api", usersRoutes(usersCollection));
 
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
