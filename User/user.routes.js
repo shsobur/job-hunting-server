@@ -6,9 +6,7 @@ module.exports = (usersCollection) => {
   router.post("/new-user-data", async (req, res) => {
     try {
       const data = req.body;
-      console.log(data);
       const email = data.userEmail;
-      console.log(email);
 
       // Check if email already exists__
       const existingUser = await usersCollection.findOne({
@@ -24,6 +22,24 @@ module.exports = (usersCollection) => {
     } catch (error) {
       console.error("Error inserting user:", error);
       res.status(500).send({ message: "Internal server error" });
+    }
+  });
+
+  // Find authenticated user data__
+  router.get("/users/email/:email", async (req, res) => {
+    try {
+      const email = req.params.email;
+      const query = { userEmail: email };
+      const result = await usersCollection.findOne(query);
+
+      if (result) {
+        res.status(200).send(result);
+      } else {
+        res.status(404).send({ message: "User not found" });
+      }
+    } catch (error) {
+      console.error("Error fetching user by email:", error);
+      res.status(500).send({ message: "Server error, my bad" });
     }
   });
 
