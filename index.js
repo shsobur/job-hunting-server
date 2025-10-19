@@ -1,10 +1,20 @@
 const express = require("express");
 const cors = require("cors");
 require("dotenv").config();
+const axios = require("axios");
 const { MongoClient, ServerApiVersion } = require("mongodb");
+
+// Import routes__
+const uploadRoute = require("./image/upload");
+const commonRoutes = require("./Common/common.routes");
+const usersRoutes = require("./User/user.routes");
+const recruiterRoutes = require("./Recruiter/recruiter.routes");
+const adminRoutes = require("./Admin/admin.routes");
 
 const app = express();
 const port = process.env.PORT || 5000;
+
+// MongoDB Connection__
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.g4yea9q.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
 const client = new MongoClient(uri, {
   serverApi: {
@@ -27,40 +37,40 @@ app.use(
 );
 app.use(express.json());
 
-// DB workshop ST__
-
+// DB setup
 async function run() {
   try {
-    // Connect the client to the server	(optional starting in v4.7)
     await client.connect();
 
-    // DB Collections__
     const db = client.db("jobHuntingDB");
     const usersCollection = db.collection("users");
+    const jobsCollection = db.collection("jobs");
+    const verifyMessageCollection = db.collection("verifyMessage");
 
-    // Import routes and pass collections__
-    const usersRoutes = require("./User/user.routes");
-
+    // Routes__
+    app.use("/upload", uploadRoute);
+    app.use("/common-api", commonRoutes(usersCollection))
     app.use("/user-api", usersRoutes(usersCollection));
-
-    // Send a ping to confirm a successful connection
-    await client.db("admin").command({ ping: 1 });
-    console.log(
-      "Pinged your deployment. You successfully connected to MongoDB!"
+    app.use(
+      "/recruiter-api",
+      recruiterRoutes(jobsCollection, verifyMessageCollection)
     );
-  } finally {
-    // await client.close();
+    app.use("/admin-api", adminRoutes(verifyMessageCollection, usersCollection));
+
+    await client.db("admin").command({ ping: 1 });
+    console.log("✅ Connected to MongoDB successfully!");
+  } catch (err) {
+    console.error("❌ DB Connection Error:", err);
   }
 }
 run().catch(console.dir);
-
-// DB workshop END__
 
 // Test route__
 app.get("/", (req, res) => {
   res.send("Job-Hunting Server is running...");
 });
 
+// Start server__
 app.listen(port, () => {
-  console.log(`Server running on port ${port}`);
+  console.log(`🚀 Server running on port ${port}`);
 });

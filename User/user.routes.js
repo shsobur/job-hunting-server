@@ -13,7 +13,7 @@ module.exports = (usersCollection) => {
         userEmail: email,
       });
       if (existingUser) {
-        return res.status(400).send({ message: "Email already exists" });
+        return res.status(200).send({ message: "Email already exists" });
       }
 
       // Insert if not found__
@@ -43,7 +43,25 @@ module.exports = (usersCollection) => {
     }
   });
 
-  // Next route hear__
+  // Update user profile data__
+  router.patch("/update-profile/:email", async (req, res) => {
+    try {
+      const data = req.body;
+      const email = req.params.email;
+      const filter = { userEmail: email };
+      const updatedDoc = { $set: data };
 
+      const result = await usersCollection.updateOne(filter, updatedDoc);
+
+      if (result.modifiedCount > 0) {
+        res.status(200).send(result);
+      } else {
+        res.status(404).send({ message: "User not found or no changes made" });
+      }
+    } catch (error) {
+      console.error("Error updating profile:", error);
+      res.status(500).send({ message: "Server error, try again later" });
+    }
+  });
   return router;
 };
