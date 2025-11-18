@@ -46,11 +46,12 @@ async function run() {
     const usersCollection = db.collection("users");
     const jobsCollection = db.collection("jobs");
     const verifyMessageCollection = db.collection("verifyMessage");
+    const applicationsCollection = db.collection("applications");
 
     // Routes__
     app.use("/upload", uploadRoute);
-    app.use("/common-api", commonRoutes(usersCollection))
-    app.use("/user-api", usersRoutes(usersCollection));
+    app.use("/common-api", commonRoutes(usersCollection, jobsCollection))
+    app.use("/user-api", usersRoutes(usersCollection, applicationsCollection));
     app.use(
       "/recruiter-api",
       recruiterRoutes(jobsCollection, verifyMessageCollection)

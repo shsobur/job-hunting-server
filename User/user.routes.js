@@ -1,7 +1,7 @@
 const express = require("express");
 const router = express.Router();
 
-module.exports = (usersCollection) => {
+module.exports = (usersCollection, applicationsCollection) => {
   // Insert new user data__
   router.post("/new-user-data", async (req, res) => {
     try {
@@ -63,5 +63,26 @@ module.exports = (usersCollection) => {
       res.status(500).send({ message: "Server error, try again later" });
     }
   });
+
+  // Job apply data__
+  router.post("/apply-job/:email", async (req, res) => {
+    try {
+      const email = req.params.email;
+      const applicantData = req.body;
+
+      if (email !== applicantData.applicantEmail) {
+        return res.status(402).send({ message: "Unauthorized user" });
+      }
+
+      const result = await applicationsCollection.insertOne(applicantData);
+      return res.status(200).send(result);
+    } catch (error) {
+      console.error("Error applying job:", error);
+      return res
+        .status(500)
+        .send({ message: "Server error", error: error.message });
+    }
+  });
+
   return router;
 };
