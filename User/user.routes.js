@@ -1,7 +1,8 @@
 const express = require("express");
+const { ObjectId } = require("mongodb");
 const router = express.Router();
 
-module.exports = (usersCollection, applicationsCollection) => {
+module.exports = (usersCollection, applicationsCollection, jobsCollection) => {
   // Insert new user data__
   router.post("/new-user-data", async (req, res) => {
     try {
@@ -82,6 +83,26 @@ module.exports = (usersCollection, applicationsCollection) => {
         .status(500)
         .send({ message: "Server error", error: error.message });
     }
+  });
+
+  router.patch("/update-job-details/:jobId", async (req, res) => {
+    const jobId = req.params.jobId;
+    const seekerId = req.body;
+    console.log(jobId);
+
+    if (!jobId || !seekerId) {
+      return res.status(400).send({ message: "Missing jobId or seekerId" });
+    }
+
+    const query = { _id: new ObjectId(jobId) };
+
+    const updatedDoc = {
+      $push: { jobApplicants: seekerId },
+      $inc: { totalApply: 1 },
+    };
+
+    const result = await jobsCollection.updateOne(query, updatedDoc);
+    res.status(200).send(result);
   });
 
   return router;

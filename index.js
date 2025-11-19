@@ -51,7 +51,7 @@ async function run() {
     // Routes__
     app.use("/upload", uploadRoute);
     app.use("/common-api", commonRoutes(usersCollection, jobsCollection))
-    app.use("/user-api", usersRoutes(usersCollection, applicationsCollection));
+    app.use("/user-api", usersRoutes(usersCollection, applicationsCollection, jobsCollection));
     app.use(
       "/recruiter-api",
       recruiterRoutes(jobsCollection, verifyMessageCollection)
