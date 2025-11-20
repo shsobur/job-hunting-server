@@ -85,6 +85,7 @@ module.exports = (usersCollection, applicationsCollection, jobsCollection) => {
     }
   });
 
+  // Add user id to job details data__
   router.patch("/update-job-details/:jobId", async (req, res) => {
     const jobId = req.params.jobId;
     const seekerId = req.body;

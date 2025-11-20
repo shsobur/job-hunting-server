@@ -30,6 +30,7 @@ module.exports = (usersCollection, jobsCollection) => {
         minSalary = "",
         maxSalary = "",
         experienceLevel = "",
+        userId = "",
       } = req.query;
 
       let query = {};
@@ -69,6 +70,11 @@ module.exports = (usersCollection, jobsCollection) => {
       if (experienceLevel) {
         const experienceArray = experienceLevel.split(",");
         query.experienceLevel = { $in: experienceArray };
+      }
+
+      // Is jobs already applied by this user__
+      if (userId) {
+        query["jobApplicants.seekerId"] = { $ne: userId };
       }
 
       // Get only non-expired jobs__
