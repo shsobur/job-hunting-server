@@ -1,7 +1,11 @@
 const express = require("express");
 const router = express.Router();
 
-module.exports = (jobsCollection, verifyMessageCollection) => {
+module.exports = (
+  jobsCollection,
+  verifyMessageCollection,
+  applicationsCollection
+) => {
   router.post("/post-job", async (req, res) => {
     try {
       const jobData = req.body;
@@ -22,7 +26,7 @@ module.exports = (jobsCollection, verifyMessageCollection) => {
   router.post("/profile-verify-message", async (req, res) => {
     try {
       const message = req.body;
-      console.log(message)
+      console.log(message);
 
       if (!message || Object.keys(message).length === 0) {
         return res.status(400).send({ message: "Message data is required" });
@@ -33,6 +37,18 @@ module.exports = (jobsCollection, verifyMessageCollection) => {
     } catch (error) {
       console.error("Error inserting verify message:", error);
       res.status(500).send({ message: "Internal server error" });
+    }
+  });
+
+  router.get("/job-applications", async (req, res) => {
+    try {
+      const result = await applicationsCollection.find().toArray();
+      res.status(200).send(result);
+    } catch (error) {
+      console.error("Error fetching job applications:", error);
+      res
+        .status(500)
+        .send({ message: "Server error while fetching applications" });
     }
   });
 

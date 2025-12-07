@@ -42,6 +42,7 @@ async function run() {
   try {
     await client.connect();
 
+    // DB Collections__
     const db = client.db("jobHuntingDB");
     const usersCollection = db.collection("users");
     const jobsCollection = db.collection("jobs");
@@ -54,7 +55,7 @@ async function run() {
     app.use("/user-api", usersRoutes(usersCollection, applicationsCollection, jobsCollection));
     app.use(
       "/recruiter-api",
-      recruiterRoutes(jobsCollection, verifyMessageCollection)
+      recruiterRoutes(jobsCollection, verifyMessageCollection, applicationsCollection)
     );
     app.use("/admin-api", adminRoutes(verifyMessageCollection, usersCollection));
 
