@@ -55,7 +55,7 @@ async function run() {
     app.use("/user-api", usersRoutes(usersCollection, applicationsCollection, jobsCollection));
     app.use(
       "/recruiter-api",
-      recruiterRoutes(jobsCollection, verifyMessageCollection, applicationsCollection)
+      recruiterRoutes(jobsCollection, verifyMessageCollection, applicationsCollection, usersCollection)
     );
     app.use("/admin-api", adminRoutes(verifyMessageCollection, usersCollection));
 

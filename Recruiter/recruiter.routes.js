@@ -1,10 +1,12 @@
 const express = require("express");
+const { ObjectId } = require("mongodb");
 const router = express.Router();
 
 module.exports = (
   jobsCollection,
   verifyMessageCollection,
-  applicationsCollection
+  applicationsCollection,
+  usersCollection
 ) => {
   router.post("/post-job", async (req, res) => {
     try {
@@ -46,9 +48,25 @@ module.exports = (
       res.status(200).send(result);
     } catch (error) {
       console.error("Error fetching job applications:", error);
-      res
+      json
         .status(500)
         .send({ message: "Server error while fetching applications" });
+    }
+  });
+
+  router.get("/resume-data/:id", async (req, res) => {
+    try {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+
+      const result = await usersCollection.findOne(query);
+
+      return res.status(200).json(result);
+    } catch (error) {
+      console.error("Error fetching resume data:", error);
+      return res
+        .status(500)
+        .json({ message: "Server error", error: error.message });
     }
   });
 
