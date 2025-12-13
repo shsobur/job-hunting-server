@@ -1,8 +1,10 @@
 const express = require("express");
 const cors = require("cors");
 require("dotenv").config();
-const axios = require("axios");
 const { MongoClient, ServerApiVersion } = require("mongodb");
+
+const app = express();
+const port = process.env.PORT || 5000;
 
 // Import routes__
 const uploadRoute = require("./image/upload");
@@ -10,9 +12,6 @@ const commonRoutes = require("./Common/common.routes");
 const usersRoutes = require("./User/user.routes");
 const recruiterRoutes = require("./Recruiter/recruiter.routes");
 const adminRoutes = require("./Admin/admin.routes");
-
-const app = express();
-const port = process.env.PORT || 5000;
 
 // MongoDB Connection__
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.g4yea9q.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
@@ -44,20 +43,24 @@ async function run() {
 
     // DB Collections__
     const db = client.db("jobHuntingDB");
+
     const usersCollection = db.collection("users");
     const jobsCollection = db.collection("jobs");
     const verifyMessageCollection = db.collection("verifyMessage");
     const applicationsCollection = db.collection("applications");
 
-    // Routes__
+    // All Routes collections__
+
+    // Cloudinary__
     app.use("/upload", uploadRoute);
-    app.use("/common-api", commonRoutes(usersCollection, jobsCollection))
-    app.use("/user-api", usersRoutes(usersCollection, applicationsCollection, jobsCollection));
-    app.use(
-      "/recruiter-api",
-      recruiterRoutes(jobsCollection, verifyMessageCollection, applicationsCollection, usersCollection)
-    );
-    app.use("/admin-api", adminRoutes(verifyMessageCollection, usersCollection));
+    // All__
+    app.use("/common-api", commonRoutes(usersCollection, jobsCollection));
+    // User__
+    app.use( "/user-api", usersRoutes(usersCollection, applicationsCollection, jobsCollection));
+    // Recruiter__
+    app.use("/recruiter-api",recruiterRoutes(jobsCollection, verifyMessageCollection, applicationsCollection, usersCollection));
+    // Admin__
+    app.use("/admin-api",adminRoutes(verifyMessageCollection, usersCollection));
 
     await client.db("admin").command({ ping: 1 });
     console.log("✅ Connected to MongoDB successfully!");

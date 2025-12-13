@@ -6,7 +6,7 @@ const router = express.Router();
 const storage = multer.memoryStorage();
 const upload = multer({ storage });
 
-// POST /upload → Upload image to Cloudinary
+// POST /upload → Upload image to Cloudinary__
 router.post("/", upload.single("file"), async (req, res) => {
   try {
     const b64 = Buffer.from(req.file.buffer).toString("base64");
