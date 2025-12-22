@@ -1,8 +1,9 @@
-const express = require("express");
-const { ObjectId } = require("mongodb");
+import express from "express";
+import { ObjectId } from "mongodb";
+
 const router = express.Router();
 
-module.exports = (usersCollection, jobsCollection) => {
+const commonRoutes = (usersCollection, jobsCollection) => {
   router.get("/profile-data/:email", async (req, res) => {
     try {
       const email = req.params.email;
@@ -129,3 +130,5 @@ module.exports = (usersCollection, jobsCollection) => {
   });
   return router;
 };
+
+export default commonRoutes;

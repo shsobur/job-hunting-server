@@ -1,8 +1,9 @@
-const express = require("express");
-const { ObjectId } = require("mongodb");
+import express from "express";
+import { ObjectId } from "mongodb";
+
 const router = express.Router();
 
-module.exports = (
+const recruiterRoutes = (
   jobsCollection,
   verifyMessageCollection,
   applicationsCollection,
@@ -72,3 +73,5 @@ module.exports = (
 
   return router;
 };
+
+export default recruiterRoutes;

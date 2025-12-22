@@ -1,8 +1,9 @@
-const express = require("express");
-const { ObjectId } = require("mongodb");
+import express from "express";
+import { ObjectId } from "mongodb";
+
 const router = express.Router();
 
-module.exports = (verifyMessageCollection, usersCollection) => {
+const adminRoutes = (verifyMessageCollection, usersCollection) => {
   router.get("/company-verify-request", async (req, res) => {
     try {
       const query = { isVerify: "Unverified" };
@@ -47,3 +48,5 @@ module.exports = (verifyMessageCollection, usersCollection) => {
 
   return router;
 };
+
+export default adminRoutes;

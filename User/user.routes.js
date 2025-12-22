@@ -1,8 +1,13 @@
-const express = require("express");
-const { ObjectId } = require("mongodb");
+import express from "express";
+import { ObjectId } from "mongodb";
+
 const router = express.Router();
 
-module.exports = (usersCollection, applicationsCollection, jobsCollection) => {
+const usersRoutes = (
+  usersCollection,
+  applicationsCollection,
+  jobsCollection
+) => {
   // Insert new user data__
   router.post("/new-user-data", async (req, res) => {
     try {
@@ -108,3 +113,5 @@ module.exports = (usersCollection, applicationsCollection, jobsCollection) => {
 
   return router;
 };
+
+export default usersRoutes;
