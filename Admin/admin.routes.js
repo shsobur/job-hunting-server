@@ -46,6 +46,47 @@ const adminRoutes = (verifyMessageCollection, usersCollection) => {
     }
   });
 
+  router.get("/all-user-list", async (req, res) => {
+    try {
+      const { search, role } = req.query;
+      const filter = {
+        projection: {
+          _id: 0,
+          profilePhoto: 1,
+          userName: 1,
+          userRole: 1,
+          userEmail: 1,
+          companyName: 1,
+          companyLogo: 1,
+        },
+      };
+      let query = {};
+
+      if (search) {
+        query.$or = [
+          { userName: { $regex: search, $options: "i" } },
+          { companyName: { $regex: search, $options: "i" } },
+          { userEmail: { $regex: search, $options: "i" } },
+        ];
+      }
+
+      if (role && role !== "all") {
+        query.userRole = role;
+      } else {
+        query.userRole = {
+          $ne: "Admin",
+        };
+      }
+
+      const users = await usersCollection.find(query, filter).toArray();
+
+      res.status(200).json(users);
+    } catch (error) {
+      console.error("Failed to fetch users:", error);
+      res.status(500).json({ message: "Server error" });
+    }
+  });
+
   return router;
 };
 

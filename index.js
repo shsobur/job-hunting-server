@@ -1,6 +1,7 @@
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
+import { createServer } from "node:http";
 import { MongoClient, ServerApiVersion } from "mongodb";
 
 // Import routes__
@@ -9,10 +10,13 @@ import commonRoutes from "./Common/common.routes.js";
 import usersRoutes from "./User/user.routes.js";
 import recruiterRoutes from "./Recruiter/recruiter.routes.js";
 import adminRoutes from "./Admin/admin.routes.js";
+import initializeSocket from "./Socket.IO/socket.js";
 
 const app = express();
 const port = process.env.PORT || 5000;
+const server = createServer(app);
 dotenv.config();
+initializeSocket(server);
 
 // MongoDB Connection__
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.g4yea9q.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
@@ -91,6 +95,7 @@ app.get("/", (req, res) => {
 });
 
 // Start server__
-app.listen(port, () => {
+server.listen(port, () => {
   console.log(`🚀 Server running on port ${port}`);
+  console.log(`🔗 Socket.IO ready at ws://localhost:${port}`);
 });
