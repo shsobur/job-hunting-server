@@ -1,5 +1,4 @@
 import { Server } from "socket.io";
-import { ObjectId } from "mongodb";
 
 const initializeSocket = (server, collections) => {
   const io = new Server(server, {

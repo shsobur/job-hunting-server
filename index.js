@@ -5,6 +5,7 @@ import { createServer } from "node:http";
 import { MongoClient, ServerApiVersion } from "mongodb";
 
 // Import routes__
+import chatRoutes from "./Chat/chat.routes.js";
 import uploadRoute from "./image/upload.js";
 import commonRoutes from "./Common/common.routes.js";
 import usersRoutes from "./User/user.routes.js";
@@ -56,15 +57,24 @@ async function run() {
     const messagesCollection = db.collection("messages");
 
     // All Routes collections__
+    // Chat__
+    app.use(
+      "/chat-api",
+      chatRoutes(conversationsCollection, messagesCollection, usersCollection)
+    );
+
     // Cloudinary__
     app.use("/upload", uploadRoute);
+
     // All__
     app.use("/common-api", commonRoutes(usersCollection, jobsCollection));
+
     // User__
     app.use(
       "/user-api",
       usersRoutes(usersCollection, applicationsCollection, jobsCollection)
     );
+
     // Recruiter__
     app.use(
       "/recruiter-api",
@@ -75,11 +85,13 @@ async function run() {
         usersCollection
       )
     );
+
     // Admin__
     app.use(
       "/admin-api",
       adminRoutes(verifyMessageCollection, usersCollection)
     );
+    
     // Socket__
     initializeSocket(server, {
       conversationsCollection,
