@@ -1,9 +1,7 @@
 import { Server } from "socket.io";
+import { ObjectId } from "mongodb";
 
-// Store temporary online users__
-const onlineUsers = new Map();
-
-const initializeSocket = (server) => {
+const initializeSocket = (server, collections) => {
   const io = new Server(server, {
     cors: {
       origin: [
@@ -16,66 +14,116 @@ const initializeSocket = (server) => {
     },
   });
 
+  const onlineUsers = new Map();
+
   io.on("connection", (socket) => {
     console.log("🔗 New connection:", socket.id);
+    const { email, userId, role } = socket.handshake.query;
 
-    // Join user__
-    socket.on("user-join", (userData) => {
-      console.log(`👤 ${userData.role} joined: ${userData.username}`);
+    // Store user as online
+    if (email) {
+      onlineUsers.set(email, socket.id);
+      console.log(`🟢 ${email} is online`);
 
-      // Stor user in memory__
-      onlineUsers.set(userData.email, {
-        ...userData,
-        role: userData.role.toLowerCase(),
-        socketId: socket.id,
-        joinedAt: new Date(),
-      });
+      // Broadcast to others that this user is online
+      socket.broadcast.emit("user_online", { email });
+    }
 
-      // If admin send use list__
-      if (userData.role === "admin") {
-        const userList = Array.from(onlineUsers.values()).filter(
-          (u) => u.role !== "admin"
-        );
-        socket.emit("online-users", userList);
-      }
-    });
+    // Handle send_message event
+    socket.on("send_message", async (data) => {
+      console.log("📨 Message received:", data);
+      const { to, text, timestamp } = data;
+      const from = email;
 
-    // Private message__
-    socket.on("private-message", async (data) => {
-      const { toEmail, message, senderData } = data;
+      try {
+        // 1. Find or create conversation
+        const conversation = await collections.conversationsCollection.findOne({
+          participants: { $all: [from, to] },
+        });
 
-      // Find receiver__
-      const receiver = onlineUsers.get(toEmail);
+        let conversationId;
 
-      if (!receiver) {
-        socket.emit("error", { message: "User is offline", toEmail });
-        return;
-      }
+        if (!conversation) {
+          // Create new conversation
+          const newConversation = {
+            participants: [from, to],
+            lastMessage: {
+              text,
+              senderEmail: from,
+              timestamp: new Date(),
+            },
+            updatedAt: new Date(),
+            createdAt: new Date(),
+          };
 
-      const messageObj = {
-        from: senderData,
-        to: receiver,
-        message: message,
-        timestamp: new Date().toISOString(),
-      };
+          const result = await collections.conversationsCollection.insertOne(
+            newConversation
+          );
+          conversationId = result.insertedId;
+        } else {
+          conversationId = conversation._id;
 
-      // Send message__
-      socket.to(receiver.socketId).emit("new-message", messageObj);
-
-      // Send confirmation__
-      socket.emit("message-sent", messageObj);
-
-      console.log(`💬 ${senderData.email} → ${receiver.email}: ${message}`);
-    });
-
-    // Disconnect__
-    socket.on("disconnect", () => {
-      for (const [email, user] of onlineUsers.entries()) {
-        if (user.socketId === socket.id) {
-          console.log(`❌ ${user.email} disconnected`);
-          onlineUsers.delete(email);
-          break;
+          // Update last message
+          await collections.conversationsCollection.updateOne(
+            { _id: conversationId },
+            {
+              $set: {
+                lastMessage: {
+                  text,
+                  senderEmail: from,
+                  timestamp: new Date(),
+                },
+                updatedAt: new Date(),
+              },
+            }
+          );
         }
+
+        // 2. Save message
+        const message = {
+          conversationId,
+          senderEmail: from,
+          receiverEmail: to,
+          text,
+          timestamp: new Date(),
+          read: false,
+        };
+
+        await collections.messagesCollection.insertOne(message);
+
+        // 3. Check if receiver is online
+        const receiverSocketId = onlineUsers.get(to);
+        if (receiverSocketId) {
+          // Send to receiver
+          io.to(receiverSocketId).emit("receive_message", message);
+        }
+
+        // Send confirmation to sender
+        socket.emit("message_sent", { success: true, message });
+      } catch (error) {
+        console.error("Error saving message:", error);
+        socket.emit("message_error", { error: "Failed to send message" });
+      }
+    });
+
+    // Handle typing event (optional)
+    socket.on("typing", (data) => {
+      const { to, isTyping } = data;
+      const receiverSocketId = onlineUsers.get(to);
+      if (receiverSocketId) {
+        io.to(receiverSocketId).emit("user_typing", {
+          from: email,
+          isTyping,
+        });
+      }
+    });
+
+    // Handle disconnect
+    socket.on("disconnect", () => {
+      console.log("❌ Disconnected:", socket.id);
+      if (email) {
+        onlineUsers.delete(email);
+        socket.broadcast.emit("user_offline", { email });
       }
     });
   });

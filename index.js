@@ -16,7 +16,6 @@ const app = express();
 const port = process.env.PORT || 5000;
 const server = createServer(app);
 dotenv.config();
-initializeSocket(server);
 
 // MongoDB Connection__
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.g4yea9q.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
@@ -53,9 +52,10 @@ async function run() {
     const jobsCollection = db.collection("jobs");
     const verifyMessageCollection = db.collection("verifyMessage");
     const applicationsCollection = db.collection("applications");
+    const conversationsCollection = db.collection("conversations");
+    const messagesCollection = db.collection("messages");
 
     // All Routes collections__
-
     // Cloudinary__
     app.use("/upload", uploadRoute);
     // All__
@@ -80,6 +80,12 @@ async function run() {
       "/admin-api",
       adminRoutes(verifyMessageCollection, usersCollection)
     );
+    // Socket__
+    initializeSocket(server, {
+      conversationsCollection,
+      messagesCollection,
+      usersCollection,
+    });
 
     await client.db("admin").command({ ping: 1 });
     console.log("✅ Connected to MongoDB successfully!");
